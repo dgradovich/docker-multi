@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dgradovich/docker-multi-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dgradovich/docker-multi-test npm test
+
+after_success:
+  - docker build -t dgradovich/docker-multi-client ./client
+  - docker build -t dgradovich/docker-multi-nginx ./nginx
+  - docker build -t dgradovich/docker-multi-server ./server
+  - docker build -t dgradovich/docker-multi-workder ./worker
+
+  # log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push dgradovich/docker-multi-client
+  - docker push dgradovich/docker-multi-nginx
+  - docker push dgradovich/docker-multi-server
+  - docker push dgradovich/docker-multi-worker
+  
